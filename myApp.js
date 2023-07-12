@@ -1,13 +1,28 @@
 require("dotenv").config();
 
-// Use mongoose to connect to my MongoDB Cloud Atlas cluster
-// with a user (user and cluster info in .env file)
+// Mongoose is a JS library for creating connections between
+// MongoDB and Node.js
+// Use Mongoose to connect to my MongoDB Cloud Atlas cluster
+// with a user (user and cluster info in .env file). I'm using
+// same user and cluster as my Flask/Python microblog project.
 // Note: Flask/Python had variable name MONGODB_URI, here,
 // using Express/JS, the enviornment variable is called MONGO_URI
 const mongoose = require("mongoose");
 mongoose.connect(process.env.MONGO_URI);
 
-let Person;
+// Mongoose schema is assigned to a variable ("Schema")
+const { Schema } = mongoose;
+// Creating a Person Schema via Mongoose Library
+const personSchema = new Schema({
+    name: { type: String, required: true },
+    age: Number,
+    favoriteFoods: [String]
+});
+
+// Creating the Person model from the schema
+const Person = mongoose.model("Person", personSchema);
+
+
 
 const createAndSavePerson = (done) => {
     done(null /*, data*/);
