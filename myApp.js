@@ -1,5 +1,11 @@
 require("dotenv").config();
 
+// Use mongoose to connect to my MongoDB Cloud Atlas cluster
+// with a user (user and cluster info in .env file)
+// Note: Flask/Python had variable name MONGODB_URI, here,
+// using Express/JS, the enviornment variable is called MONGO_URI
+const mongoose = require("mongoose");
+mongoose.connect(process.env.MONGO_URI);
 
 let Person;
 
@@ -50,6 +56,10 @@ const queryChain = (done) => {
 
     done(null /*, data*/);
 };
+
+/** 1) Install & Set up mongoose */
+// const mongoose = require("mongoose");
+// mongoose.connect(process.env.MONGO_URI);
 
 /** **Well Done !!**
 /* You completed these challenges, let's go celebrate !
