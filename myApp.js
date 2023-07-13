@@ -1,5 +1,6 @@
 require("dotenv").config();
 
+////////// (1) Install and setup Mongoose.
 // Mongoose is a JS library for creating connections between
 // MongoDB and Node.js
 // Use Mongoose to connect to my MongoDB Cloud Atlas cluster
@@ -8,8 +9,20 @@ require("dotenv").config();
 // Note: Flask/Python had variable name MONGODB_URI, here,
 // using Express/JS, the enviornment variable is called MONGO_URI
 const mongoose = require("mongoose");
-mongoose.connect(process.env.MONGO_URI);
 
+// mongoose.connect(process.env.MONGO_URI);
+// Also give the database name to prevent deprication errors
+mongoose.connect(process.env.MONGO_URI, {
+    dbName: process.env.DB_NAME,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: true,
+}).then(() => {
+    console.log("database connected.");
+}).catch((err) => console.log(err.message));
+
+////////// (2) Create a "Person" Model
 // Mongoose schema is assigned to a variable ("Schema")
 const { Schema } = mongoose;
 // Creating a Person Schema via Mongoose Library
@@ -19,23 +32,41 @@ const personSchema = new Schema({
     favoriteFoods: [String]
 });
 
+// (3) Create and save a Person
 // Creating the Person model from the schema
 const Person = mongoose.model("Person", personSchema);
 
-
-
 const createAndSavePerson = (done) => {
-    done(null /*, data*/);
+    const person = new Person({ name: "S Fraser", age: 101, favoriteFoods: ["Pizza", "Ice Cream"] });
+    person.save(function (err, data) {
+        if (err) return console.error(err);
+        done(null, data);
+    });
 };
+
+// (4) Create many people with Model.create()
+let arrayOfPeople = [
+    { name: "Picard", age: 56, favoriteFoods: ["Early Grey"] },
+    { name: "Spock", age: 34, favoriteFoods: ["Vegggies"] },
+    { name: "Worf", age: 32, favoriteFoods: ["Steak"] }
+];
 
 const createManyPeople = (arrayOfPeople, done) => {
-    done(null /*, data*/);
+    Person.create(arrayOfPeople, function (err, people) {
+        if (err) return console.log(err);
+        done(null, people);
+    });
 };
 
+////////// (5) Use Model.find to search my database
 const findPeopleByName = (personName, done) => {
-    done(null /*, data*/);
+    Person.find({ name: personName }, function (err, personFound) {
+        if (err) return console.log(err);
+        done(null, personFound);
+    });
 };
 
+//--------------------------------------------------
 const findOneByFood = (food, done) => {
     done(null /*, data*/);
 };
