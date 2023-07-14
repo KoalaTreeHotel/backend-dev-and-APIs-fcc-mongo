@@ -28,7 +28,7 @@ mongoose.connect(process.env.MONGO_URI, {
     console.log("database connected.");
 }).catch((err) => console.log(err.message));
 
-//////////////////// Fruits test START
+//////////////////// Fruits test START (my test to access DB)
 // Quickstart:
 // (i) Connect to MongoDB cluster / database [fruitsDB], connect via MONGO_URI
 // (ii) Create a schema, shape of document / "row", [fruitSchema]
@@ -80,7 +80,7 @@ const personSchema = new mongoose.Schema({
     favoriteFoods: [String]
 });
 
-// (3) Create and save a Person
+////////// (3) Create and save a Person
 // Creating the Person model (Mongoose Model) from the schema
 // Will create a new collection called Persons (Mongoose will pluralise it)
 // adhering to personSchema
@@ -97,15 +97,16 @@ const createAndSavePerson = (done) => {
     });
 };
 
-// Call the function
-createAndSavePerson( (err, data) => {
-    if(err){console.log(err);} console.log(data);
+// Call the  create and save person function
+console.log("Creating and saving a single person (myself!)...");
+createAndSavePerson((err, data) => {
+    if (err) { console.log(err); } console.log(data);
 });
 
-// (4) Create many people with Model.create()
+////////// (4) Create many people with Model.create()
 let arrayOfPeople = [
-    { name: "Picard", age: 56, favoriteFoods: ["Early Grey"] },
-    { name: "Spock", age: 34, favoriteFoods: ["Vegggies"] },
+    { name: "Picard", age: 56, favoriteFoods: ["Earl Grey"] },
+    { name: "Spock", age: 34, favoriteFoods: ["Veggies"] },
     { name: "Worf", age: 32, favoriteFoods: ["Steak"] }
 ];
 
@@ -116,6 +117,12 @@ const createManyPeople = (arrayOfPeople, done) => {
     });
 };
 
+// Call create many people function
+console.log("Create many people via array...");
+createManyPeople(arrayOfPeople, (err, data) => {
+    if (err) { console.log(err); } console.log(data);
+});
+
 ////////// (5) Use Model.find() to search my database
 const findPeopleByName = (personName, done) => {
     Person.find({ name: personName }, function (err, personFound) {
@@ -123,6 +130,8 @@ const findPeopleByName = (personName, done) => {
         done(null, personFound);
     });
 };
+
+// Call the find method and look for Spock
 
 ////////// (6) Use Model.findOne() to return a single matching document
 const findOneByFood = (food, done) => {
@@ -132,24 +141,66 @@ const findOneByFood = (food, done) => {
     });
 };
 
+// Call the find by food method and look for "Earl Gray"
+console.log("Looking for 'Earl Grey'...");
+findOneByFood("Earl Grey", (err, data) => {
+    if (err) { console.log(err); } console.log(data);
+});
+
+////////// (7)
+// Search via the automatically added field "_id"
 const findPersonById = (personId, done) => {
-    done(null /*, data*/);
+    Person.findById(personId, (err, data) => {
+        if (err) return console.log(err);
+        console.log(data);
+        done(null, data);
+    });
 };
 
+////////// (8)
+// Classic (old) way to update a document (find it, edit it, then save it)
+// See section (9) for a better way
 const findEditThenSave = (personId, done) => {
     const foodToAdd = "hamburger";
-
-    done(null /*, data*/);
+    Person.findById(personId, (err, data) => {
+        if (err) return console.log(err);
+        console.log(data);
+        // Add the new favorite food to the array
+        data.favoriteFoods.push(foodToAdd);
+        console.log(data);
+        // Save updated data to the database
+        data.save((err2, data2) => {
+            if (err2) return console.error(err2);
+            console.log(data2);
+            done(null, data2);
+        });
+    });
 };
 
+////////// (9)
+// The new (better) way to update a document via model.findOneAndUpdate()
 const findAndUpdate = (personName, done) => {
-    const ageToSet = 20;
-
-    done(null /*, data*/);
+    let ageToSet = 20;
+    Person.findOneAndUpdate({ name: personName }, { age: ageToSet }, { new: true },
+        function (err, data) {
+            if (err) return console.log(err);
+            console.log(data);
+            done(null, data);
+        });
 };
 
-const removeById = (personId, done) => {
-    done(null /*, data*/);
+////////// (10)
+// Delete one document
+const removeById = function (personId, done) {
+    Person.findByIdAndRemove(
+        personId,
+        (err, removedDoc) => {
+            if (err) {
+                return console.log(err);
+            }
+            done(null, removedDoc);
+        }
+    );
 };
 
 const removeManyPeople = (done) => {
@@ -163,14 +214,6 @@ const queryChain = (done) => {
 
     done(null /*, data*/);
 };
-
-/** 1) Install & Set up mongoose */
-// const mongoose = require("mongoose");
-// mongoose.connect(process.env.MONGO_URI);
-
-/** **Well Done !!**
-/* You completed these challenges, let's go celebrate !
- */
 
 //----- **DO NOT EDIT BELOW THIS LINE** ----------------------------------
 
