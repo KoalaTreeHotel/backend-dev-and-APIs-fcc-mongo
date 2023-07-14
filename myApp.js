@@ -203,16 +203,36 @@ const removeById = function (personId, done) {
     );
 };
 
+////////// (11)
+// Delete all the documents matching a criteria
 const removeManyPeople = (done) => {
-    const nameToRemove = "Mary";
-
-    done(null /*, data*/);
+    let nameToRemove = "Mary";
+    Person.remove({ name: nameToRemove }, function (err, data) {
+        if (err) return console.log(err);
+        console.log(data);
+        done(null, data);
+    });
 };
 
+////////// (12)
+// Don't pass a callback to Model.find() (or other search methods)
+// so the query is NOT executed. But we can store the query in a
+// variable for later use. Build up more complex queries via a
+// syntax chain. Execute the query chain via the .exec() method
 const queryChain = (done) => {
     const foodToSearch = "burrito";
-
-    done(null /*, data*/);
+    let myQuery = Person.find({ favoriteFoods: foodToSearch });
+    // Sort by name, limit results to 2 documents, hide their age
+    myQuery.sort({ name: 1 }).limit(2).select({ age: 0 }).exec(
+        // Passing the "done(err, data)" callback to .exec()
+        function (err, data) {
+            if (err) {
+                return console.log(err);
+            }
+            console.log(data);
+            done(null, data);
+        }
+    );
 };
 
 //----- **DO NOT EDIT BELOW THIS LINE** ----------------------------------
