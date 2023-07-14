@@ -59,7 +59,7 @@ const fruitSchema = new mongoose.Schema({
 const Fruit = mongoose.model("Fruit", fruitSchema);
 
 // (iv) A fruit (using the model object to instantiate a document (row))
-const fruit = new Fruit ({
+const fruit = new Fruit({
     name: "Apple",
     rating: 7,
     review: "Crunchy and juicy"
@@ -96,6 +96,11 @@ const createAndSavePerson = (done) => {
         done(null, data);
     });
 };
+
+// Call the function
+createAndSavePerson( (err, data) => {
+    if(err){console.log(err);} console.log(data);
+});
 
 // (4) Create many people with Model.create()
 let arrayOfPeople = [
