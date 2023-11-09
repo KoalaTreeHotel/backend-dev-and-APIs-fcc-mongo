@@ -12,6 +12,7 @@ require("dotenv").config();
 //
 // MongoDB collection ~= table in SQL
 // MongoDB document ~= record/row in SQL
+// MongoDB field ~= field/column in SQL
 
 ////////// (1) Install and setup Mongoose.
 const mongoose = require("mongoose");
@@ -97,7 +98,7 @@ const createAndSavePerson = (done) => {
     });
 };
 
-// Call the  create and save person function
+// Call the create and save person function
 console.log("Creating and saving a single person (myself!)...");
 createAndSavePerson((err, data) => {
     if (err) { console.log(err); } console.log(data);
