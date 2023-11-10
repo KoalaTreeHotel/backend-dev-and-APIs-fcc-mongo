@@ -81,17 +81,19 @@ const createAndSavePerson = (done) => {
     });
 };
 
+/*
 // Call the create and save person function. Print to console (as well as updating MongoDB)
 console.log("Creating and saving a single person (myself!)...");
 createAndSavePerson((err, data) => {
-    if (err) { console.error(err); } console.log(data);
+    if (err) { return console.error(err); } console.log(data);
 });
+*/
 
 
 //(4) CREATE MANY RECORDS WITH MODEL.CREATE(): Create Many Records with model.create(). Model.create() takes an array of objects like [{name: 'John', ...}, {...}, ...] as the first argument, and saves them all in the db
 let arrayOfPeople = [
-    { name: "Picard", age: 56, favoriteFoods: ["Earl Grey"] },
-    { name: "Spock", age: 34, favoriteFoods: ["Veggies"] },
+    { name: "Picard", age: 56, favoriteFoods: ["Earl Grey Tea"] },
+    { name: "Spock", age: 34, favoriteFoods: ["Knowledge"] },
     { name: "Worf", age: 32, favoriteFoods: ["Wriggly Gagh"] },
 ];
 
@@ -102,23 +104,38 @@ const createManyPeople = (arrayOfPeople, done) => {
     });
 };
 
+/*
 // Call create many people function. Print to console (as well as updating MongoDB)
 console.log("Create many people via array...");
 createManyPeople(arrayOfPeople, (err, data) => {
-    if (err) { console.log(err); } console.log(data);
+    if (err) { return console.log(err); } console.log(data);
 });
+*/
 
-
-
-
-
-const findPeopleByName = (personName, done) => {
-    done(null /*, data*/);
+//(5) USE MODEL.FIND() TO SEARCH YOUR DATABASE: In its simplest usage, Model.find() accepts a query document (a JSON object) as the first argument, then a callback. It returns an array of matches. It supports an extremely wide range of search options. 
+// Distinct creation of callback function
+const findPeopleByName = function(personName, cbFunc) {
+    Person.find({name: personName,}, cbFunc);
 };
 
-const findOneByFood = (food, done) => {
-    done(null /*, data*/);
+const myDoneCallback = function(err, data) {
+    if(err) { 
+        return console.log(err);
+    }
+    console.log(data);
 };
+/*
+console.log("Find people by name...");
+findPeopleByName("Spock", myDoneCallback);
+*/
+
+//(6) USE MODEL.FINDONE() TO RETURN A SINGLE MATCHING DOCUMENT FROM YOUR DATABASE: Model.findOne() behaves like Model.find(), but it returns only one document (not an array), even if there are multiple items. It is especially useful when searching by properties that you have declared as unique
+const findOneByFood = (food, cbFunc) => {
+    Person.findOne({ favoriteFoods: food, }, cbFunc);
+};
+console.log("Find one by food...");
+findOneByFood("Earl Grey Hot", myDoneCallback);
+
 
 const findPersonById = (personId, done) => {
     done(null /*, data*/);
