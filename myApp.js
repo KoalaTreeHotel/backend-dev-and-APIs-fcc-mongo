@@ -29,7 +29,7 @@ mongoose.connect(process.env.MONGO_URI, {
     useUnifiedTopology: true,
 }).then(() => {
     console.log("database connected.");
-}).catch((err) => console.log(err.message));
+}).catch((err) => console.error(err.message));
 
 
 //(2) CREATE A MODEL: First of all, we need a Schema. Each schema maps to a MongoDB collection. It defines the shape of the documents within that collection. Schemas are building blocks for Models. They can be nested to create complex models, but in this case, we'll keep things simple. A model allows you to create instances of your objects, called documents.
@@ -37,6 +37,7 @@ mongoose.connect(process.env.MONGO_URI, {
 // The DONE() function is a callback that tells us that we can PROCEED AFTER COMPLETING AN ASYNCHRONOUS OPERATION such as inserting, searching, updating, or deleting (CRUD). It's following the Node convention, and should be called as done(null, data) on success, or done(err) on error.
 // A mongoose schema defines the structure (shape) of the document (fields/schemaType ~= keys/values), the structure is determined by the fields/schemaType that make up the document.
 // A mongoose model wraps around the mongoose schema. The mongoose schema is compiled into a mongoose model. The mongoose model is an interface MongoDB to perform CRUD on records withing the database.
+// A mongoose model is used in our JS code to interact with the mongodb database
 // Creating a moongoose model is made up of three parts:
 //    1. Reference Mongoose
 //    2. Define Schema (ie: define the document properties, fields/schemaTypes ~= key/values ~= cols/rows)
@@ -80,7 +81,6 @@ const createAndSavePerson = (done) => {
         done(null, data);
     });
 };
-
 /*
 // Call the create and save person function. Print to console (as well as updating MongoDB)
 console.log("Creating and saving a single person (myself!)...");
@@ -99,11 +99,10 @@ let arrayOfPeople = [
 
 const createManyPeople = (arrayOfPeople, done) => {
     Person.create(arrayOfPeople, (err, people) => {
-        if (err) return console.log(err);
+        if (err) return console.error(err);
         done(null, people);
     });
 };
-
 /*
 // Call create many people function. Print to console (as well as updating MongoDB)
 console.log("Create many people via array...");
@@ -120,7 +119,7 @@ const findPeopleByName = function(personName, cbFunc) {
 
 const myDoneCallback = function(err, data) {
     if(err) { 
-        return console.log(err);
+        return console.error(err);
     }
     console.log(data);
 };
@@ -129,49 +128,145 @@ console.log("Find people by name...");
 findPeopleByName("Spock", myDoneCallback);
 */
 
+
 //(6) USE MODEL.FINDONE() TO RETURN A SINGLE MATCHING DOCUMENT FROM YOUR DATABASE: Model.findOne() behaves like Model.find(), but it returns only one document (not an array), even if there are multiple items. It is especially useful when searching by properties that you have declared as unique
 const findOneByFood = (food, cbFunc) => {
     Person.findOne({ favoriteFoods: food, }, cbFunc);
 };
+/*
 console.log("Find one by food...");
 findOneByFood("Earl Grey Hot", myDoneCallback);
+*/
 
 
-const findPersonById = (personId, done) => {
-    done(null /*, data*/);
+//(7) USE MODEL.FINDBYID() TO SEARCH YOUR DATABASE BY _ID: When saving a document, MongoDB automatically adds the field _id, and set it to a unique alphanumeric key. Searching by _id is an extremely frequent operation, so Mongoose provides a dedicated method for it.
+const findPersonById = (personId, cbFunc) => {
+    Person.findById(personId, cbFunc);
 };
+/*
+console.log("find person by ID...");
+findPersonById("64b1894ec2c01f40a854e723", myDoneCallback);
+*/
 
-const findEditThenSave = (personId, done) => {
+
+//(8) PERFORM CLASSIC UPDATES BY RUNNING FIND, EDIT, THEN SAVE: In the good old days, this was what you needed to do if you wanted to edit a document, and be able to use it somehow (e.g. sending it back in a server response). Mongoose has a dedicated updating method: Model.update(). It is bound to the low-level mongo driver. It can bulk-edit many documents matching certain criteria, but it doesn’t send back the updated document, only a 'status' message. Furthermore, it makes model validations difficult, because it just directly calls the mongo driver.
+// Classic (old) way to update a document (find it, edit it, then save it)
+// See section nine for a better way
+/*
+    const findEditThenSave = (personId, cbFuncExpanded) => {
+
+        // Find: 
+        Person.findById(personId, cbFuncExpanded); 
+
+    };
+    // Adding a new favorite food to a particular person and saving it in the database
+    const myDoneCallbackExpanded = function(err, data) {
+        myDoneCallback(err, data); // for Person.findById()
+
+        // Edit: add the new favorite food to the array
+        const foodToAdd = "hamburger";
+        data.favoriteFoods.push(foodToAdd);
+
+        // Save: save updated data to the database
+        data.save(myDoneCallback);
+    };
+    console.log("Classic/old way to find, edit and then save a document/row/record ...");
+    findEditThenSave("64b1894ec2c01f40a854e723", myDoneCallbackExpanded);
+*/
+const findEditThenSave = (personId, cbFunc) => {
     const foodToAdd = "hamburger";
-
-    done(null /*, data*/);
+    // Find: 
+    Person.findById(personId, (err, data) => {
+        if (err) return console.log(err);
+        console.log(data);
+        // Edit: Add the new favorite food to the array
+        data.favoriteFoods.push(foodToAdd);
+        console.log(data);
+        // Save: Save updated data to the database
+        data.save(cbFunc);
+    });
 };
+/*
+console.log("Classic/old way to find, edit and then save a document/row/record ...");
+findEditThenSave("64b1894ec2c01f40a854e724", myDoneCallback);
+*/
 
+
+//(9) PERFORM NEW UPDATES ON A DOCUMENT USING MODEL.FINDONEANDUPDATE(): Recent versions of Mongoose have methods to simplify documents updating. Some more advanced features (i.e. pre/post hooks, validation) behave differently with this approach, so the classic method is still useful in many situations. findByIdAndUpdate() can be used when searching by id.
+// The new (better) way to update a document via model.findOneAndUpdate()
 const findAndUpdate = (personName, done) => {
-    const ageToSet = 20;
-
-    done(null /*, data*/);
+    let ageToSet = 20;
+    Person.findOneAndUpdate({ name: personName }, { age: ageToSet }, { new: true },
+        function (err, data) {
+            if (err) return console.error(err);
+            console.log(data);
+            done(null, data);
+        });
 };
+/*
+console.log("Perform new updates on a document using Model.findOneAndUpdate() ...");
+findAndUpdate("S Fraser", myDoneCallback);
+*/
 
-const removeById = (personId, done) => {
-    done(null /*, data*/);
+//(10) DELETE ONE DOCUMENT USING MODEL.FINDBYIDANDREMOVE: findByIdAndRemove and findOneAndRemove are like the previous update methods. They pass the removed document to the db. As usual, use the function argument personId as the search key.
+// Delete one document
+const removeById = function (personId, done) {
+    Person.findByIdAndRemove(
+        personId,
+        (err, removedDoc) => {
+            if (err) {
+                return console.error(err);
+            }
+            done(null, removedDoc);
+        }
+    );
 };
+/*
+console.log("removing document by ID");
+removeById("64b1894ec2c01f40a854e723", myDoneCallback);
+*/
 
+//(11) DELETE MANY DOCUMENTS WITH MODEL.REMOVE(): Modify the removeManyPeople function to delete all the people whose name is within the variable nameToRemove, using Model.remove(). Pass it to a query document with the name field set, and a callback.
+// Note: The Model.remove() doesn’t return the deleted document, but a JSON object containing the outcome of the operation, and the number of items affected. Don’t forget to pass it to the done() callback, since we use it in tests.
+// Delete all the documents matching a criteria
 const removeManyPeople = (done) => {
-    const nameToRemove = "Mary";
-
-    done(null /*, data*/);
+    let nameToRemove = "Worf";
+    Person.remove({ name: nameToRemove }, function (err, data) {
+        if (err) return console.error(err);
+        console.log(data);
+        done(null, data);
+    });
 };
+/*
+console.log("remove many people by ID...");
+removeManyPeople(myDoneCallback);
+*/
 
+//(12) CHAIN SEARCH QUERY HELPERS TO NARROW SEARCH RESULTS: If you don’t pass the callback as the last argument to Model.find() (or to the other search methods), the query is not executed. You can store the query in a variable for later use. This kind of object enables you to build up a query using chaining syntax. The actual db search is executed when you finally chain the method .exec(). You always need to pass your callback to this last method. There are many query helpers, here we'll use the most commonly used.
+// Don't pass a callback to Model.find() (or other search methods)
+// so the query is NOT executed. But we can store the query in a
+// variable for later use. Build up more complex queries via a
+// syntax chain. Execute the query chain via the .exec() method
 const queryChain = (done) => {
-    const foodToSearch = "burrito";
+    const foodToSearch = "Knowledge";
+    let myQuery = Person.find({ favoriteFoods: foodToSearch });
 
-    done(null /*, data*/);
+    // Sort by name, limit results to 2 documents, hide their age
+    myQuery.sort({ name: 1 }).limit(2).select({ age: 0 }).exec(
+        // Passing the "done(err, data)" callback to .exec()
+        function (err, data) {
+            if (err) {
+                return console.error(err);
+            }
+            console.log(data);
+            done(null, data);
+        }
+    );
 };
-
-/** **Well Done !!**
-/* You completed these challenges, let's go celebrate !
- */
+/*
+console.log("Query chain formed by not passing callback");
+queryChain(myDoneCallback);
+*/
 
 //----- **DO NOT EDIT BELOW THIS LINE** ----------------------------------
 
