@@ -1,6 +1,6 @@
 # MongoDB and Mongoose
 
-MongoDB and Mongoose lessons. FCC Course.
+MongoDB and Mongoose lessons. FCC Backend API course.
 
 Instructions:
 
